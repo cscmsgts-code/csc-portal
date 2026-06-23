@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSGT CSC Management Portal</title>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --dark-color: #212529;
+            --warning-color: #ffc107;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        /* LOGIN PAGE STYLING */
+        .login-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--primary-color);
+        }
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--dark-color);
+        }
+        .login-error {
+            color: var(--danger-color);
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            display: none;
+            text-align: center;
+        }
+
+        /* MAIN PORTAL AREA */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        /* Header & Logout Layout */
+        .portal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .portal-header h2 { margin: 0; border: none; padding: 0; }
+        .logout-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .logout-btn:hover { background: #bb2d3b; }
+
+        h3, h4 { color: var(--dark-color); border-bottom: 2px solid #eee; padding-bottom: 5px; margin-top: 25px; }
+        .row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
+        .col { flex: 1; min-width: 200px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background: var(--primary-color); color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { opacity: 0.9; }
+        .btn-success { background: var(--success-color); }
+        .btn-danger { background: var(--danger-color); padding: 8px 12px; margin-top: 22px; }
+        .btn-warning { background: var(--warning-color); color: #000; margin-left: 10px; }
+        
+        /* Dashboard Stats */
+        .dashboard { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+        .card { flex: 1; min-width: 200px; padding: 15px; border-radius: 6px; color: white; font-size: 1.2rem; font-weight: bold; }
+        .bg-blue { background: #0b5ed7; }
+        .bg-green { background: #157347; }
+        
+        /* Expiry Alerts Dashboard Box */
+        .expiry-alert-box { background: #fff3cd; border: 1px solid #ffe69c; color: #664d03; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .expiry-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #dfd5b2; }
+        .expiry-item:last-child { border-bottom: none; }
+        .whatsapp-btn { background: #25D366; color: white; text-decoration: none; padding: 5px 10px; font-weight: bold; border-radius: 4px; font-size: 0.85rem; display: inline-block; }
+        .whatsapp-btn:hover { background: #20ba5a; }
+
+        /* Fixed Row Layout */
+        .services-section { margin-top: 20px; }
+        .service-header-btn { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .service-header-btn button { padding: 5px 12px; font-size: 1.2rem; border-radius: 4px; }
+        .service-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; margin-bottom: 15px; background: #fafafa; padding: 12px; border-radius: 6px; border: 1px solid #e5e5e5; }
+        .service-col { flex: 1; min-width: 100px; }
+        .service-col.wide { flex: 2; min-width: 180px; }
+        .service-col label { font-size: 0.8rem; color: #555; margin-bottom: 4px; font-weight: bold; }
+
+        /* Report Table View */
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .report-table th, .report-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .report-table th { background-color: #f2f2f2; }
+
+        /* Hidden area for screen */
+        #invoice-print-area { display: none; }
+
+        /* A6 PROFESSIONAL INVOICE STYLING FOR PRINT */
+        @media print {
+            body * { display: none !important; }
+            #invoice-print-area, #invoice-print-area * { display: block !important; }
+            
+            #invoice-print-area table { display: table !important; width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; }
+            #invoice-print-area thead { display: table-header-group !important; }
+            #invoice-print-area tbody { display: table-row-group !important; }
+            #invoice-print-area tr { display: table-row !important; }
+            #invoice-print-area th, #invoice-print-area td { display: table-cell !important; box-sizing: border-box !important; }
+            #invoice-print-area img { display: inline-block !important; }
+            
+            @page { size: A6; margin: 5mm; }
+            
+            #invoice-print-area {
+                position: absolute; left: 0; top: 0; width: 95mm;
+                box-sizing: border-box; background: white !important; color: #000 !important;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 5px;
+            }
+            .inv-logo-row { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 12px; }
+            .inv-logo-row img.logo-left { width: 38px !important; height: auto !important; }
+            .inv-logo-row img.logo-right { width: 48px !important; height: auto !important; }
+            .inv-no { font-size: 10px !important; color: #333; font-weight: bold; text-align: right; }
+            .inv-main-title { font-size: 24px !important; font-weight: 800 !important; letter-spacing: -0.5px; text-transform: uppercase; margin: 10px 0 5px 0; }
+            .inv-date-text { font-size: 10px !important; margin-bottom: 15px; color: #444; }
+            .inv-details-grid { display: flex !important; justify-content: space-between !important; font-size: 9.5px !important; line-height: 1.4 !important; margin-bottom: 15px; }
+            .inv-billing-col { width: 46% !important; }
+            .inv-shop-col { width: 54% !important; text-align: right !important; }
+            .inv-label { font-weight: bold !important; margin-bottom: 2px; color: #000; }
+            
+            .inv-items-table { width: 100% !important; margin-top: 5px; font-size: 10px !important; }
+            .inv-items-table th { padding: 6px 4px !important; font-weight: bold !important; color: #000 !important; border: 1px solid #000 !important; text-transform: uppercase; background-color: #f5f5f5 !important; }
+            .inv-items-table td { padding: 7px 4px !important; border: 1px solid #000 !important; line-height: 1.2; vertical-align: middle !important; }
+            
+            .col-sno { width: 12% !important; text-align: center !important; }
+            .col-service { width: 44% !important; text-align: left !important; }
+            .col-qty { width: 12% !important; text-align: center !important; }
+            .col-rate { width: 15% !important; text-align: right !important; }
+            .col-amount { width: 17% !important; text-align: right !important; }
+
+            .inv-total-row { display: flex !important; justify-content: flex-end !important; margin-top: 15px; font-size: 11px !important; font-weight: bold !important; }
+            .inv-total-box { width: 45%; display: flex !important; justify-content: space-between !important; border-top: 1px solid #000; padding-top: 6px; }
+            .inv-footer { text-align: left !important; font-size: 8.5px !important; margin-top: 25px; color: #555; line-height: 1.4; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 1. LOGIN INTERFACE -->
+<div id="login-screen" class="login-container">
+    <h2>MSGT CSC Login</h2>
+    <div id="login-error-msg" class="login-error">Invalid Username or Password!</div>
+    <div style="margin-bottom: 15px;">
+        <label>User ID</label>
+        <input type="text" id="login-username" placeholder="Enter User ID">
+    </div>
+    <div style="margin-bottom: 20px;">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter Password">
+    </div>
+    <button style="width: 100%; padding: 12px;" onclick="checkLogin()">Login</button>
+</div>
+
+<!-- 2. MAIN APPLICATION PORTAL (HIDDEN BY DEFAULT) -->
+<div class="container" id="main-portal-content" style="display: none;">
+    <!-- PORTAL HEADER WITH LOGOUT BUTTON -->
+    <div class="portal-header">
+        <h2>MSGT CSC Management Portal</h2>
+        <button class="logout-btn" onclick="logoutUser()">Logout ↩</button>
+    </div>
+    
+    <!-- DASHBOARD -->
+    <div class="dashboard">
+        <div class="card bg-blue">Total Collection: ₹<span id="dash-collection">0</span></div>
+        <div class="card bg-green">Net Profit: ₹<span id="dash-profit">0</span></div>
+    </div>
+
+    <!-- DYNAMIC EXPIRY REMINDERS DASHBOARD -->
+    <div id="expiry-dashboard-section" class="expiry-alert-box" style="display:none;">
+        <h4 style="margin-top:0; border-color:#dfd5b2; color:#664d03;">⚠️ Expiry Reminders (Next 7 Days)</h4>
+        <div id="expiry-alerts-container"></div>
+    </div>
+
+    <!-- SEARCH CUSTOMER -->
+    <h3>Search Customer (Mobile Number)</h3>
+    <div class="row">
+        <div class="col"><input type="text" id="search-mobile" placeholder="Enter mobile number to search..."></div>
+        <div class="col"><button onclick="searchCustomer()">Search</button></div>
+    </div>
+    <div id="search-result"></div>
+
+    <!-- ADD CUSTOMER & BILLING -->
+    <h3>New Customer & Billing</h3>
+    <div class="row">
+        <div class="col">
+            <label>Customer Name</label>
+            <input type="text" id="cust-name">
+        </div>
+        <div class="col">
+            <label>WhatsApp Number</label>
+            <input type="text" id="cust-phone">
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <label>Govt Login ID</label>
+            <input type="text" id="cust-login">
+        </div>
+        <div class="col">
+            <label>Govt Password</label>
+            <input type="text" id="cust-pass">
+        </div>
+        <div class="col">
+            <label>Expiry Date (Reminder)</label>
+            <input type="date" id="cust-expiry">
+        </div>
+    </div>
+
+    <!-- SERVICES CONTAINER -->
+    <div class="services-section">
+        <div class="service-header-btn">
+            <h4 style="margin:0; border:none;">Services</h4>
+            <button type="button" onclick="addServiceRow()">+</button>
+        </div>
+        
+        <div id="services-container">
+            <!-- Rows injected dynamically -->
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div style="margin-top: 25px; text-align: right;">
+        <button class="btn-success" onclick="saveData()">1. Save Bill Data</button>
+        <button id="manual-print-btn" class="btn-warning" onclick="triggerManualPrint()" style="display: none;">2. Print Invoice 🖨️</button>
+    </div>
+
+    <!-- REPORTS & HISTORY -->
+    <h3>Reports & History</h3>
+    <div style="margin-bottom: 15px;">
+        <button onclick="exportToExcel()">Download Excel Report (CSV)</button>
+    </div>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Bill ID</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Total Bill</th>
+                <th>Net Profit</th>
+            </tr>
+        </thead>
+        <tbody id="report-history-body">
+            <tr><td colspan="6" style="text-align:center; color:#888;">No transactions recorded today.</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- PROFESSIONAL A6 SIZE INVOICE PRINT AREA -->
+<div id="invoice-print-area">
+    <div class="inv-logo-row">
+        <div style="display: flex !important; gap: 8px !important; align-items: center !important;">
+            <img src="ms1_2.png" class="logo-left" alt="Logo">
+            <img src="7a_2.png" class="logo-right" alt="Logo">
+        </div>
+        <div class="inv-no">NO. <span id="inv-id"></span></div>
+    </div>
+    
+    <div class="inv-main-title">INVOICE</div>
+    <div class="inv-date-text"><strong>Date:</strong> <span id="inv-date"></span></div>
+    
+    <div class="inv-details-grid">
+        <div class="inv-billing-col">
+            <div class="inv-label">Billed to:</div>
+            <div id="inv-cust-name" style="font-weight: bold;"></div>
+            <div>Mob: <span id="inv-cust-phone"></span></div>
+        </div>
+        <div class="inv-shop-col">
+            <div class="inv-label">From:</div>
+            <div style="font-weight: bold;">ജനസേവന കേന്ദ്രം</div>
+            <div>ITM കോളേജിന് സമീപം, ഒമ്പതാം മൈൽ</div>
+            <div>പാവന്നൂർ മൊട്ട പി ഒ, കണ്ണൂർ - 670602</div>
+            <div style="font-weight: bold;">Mob: +91 7510402365</div>
+        </div>
+    </div>
+    
+    <table class="inv-items-table">
+        <thead>
+            <tr>
+                <th class="col-sno">S No</th>
+                <th class="col-service">Services</th>
+                <th class="col-qty">Qty</th>
+                <th class="col-rate">Rate</th>
+                <th class="col-amount">Amount</th>
+            </tr>
+        </thead>
+        <tbody id="inv-items"></tbody>
+    </table>
+    
+    <div class="inv-total-row">
+        <div class="inv-total-box">
+            <span>Total</span>
+            <span>₹<span id="inv-total"></span></span>
+        </div>
+    </div>
+    
+    <div class="inv-footer">
+        <strong>Payment method:</strong> Cash<br>
+        <strong>Note:</strong> Thank you for choosing us! For queries, Contact: +91 7510402365
+    </div>
+</div>
+
+<script>
+    // LOGIN VALIDATION SYSTEM
+    function checkLogin() {
+        const uName = document.getElementById('login-username').value.trim();
+        const uPass = document.getElementById('login-password').value.trim();
+        const errorMsg = document.getElementById('login-error-msg');
+
+        // YOU CAN CHANGE LOGIN CREDENTIALS HERE
+        if (uName === "msgtecsc" && uPass === "itm9mile") {
+            errorMsg.style.display = "none";
+            document.getElementById('login-screen').style.display = "none";
+            document.getElementById('main-portal-content').style.display = "block";
+            
+            // Core initializations after success login
+            addServiceRow();
+            updateDashboard();
+            checkExpiryAlerts();
+            renderReportTable();
+        } else {
+            errorMsg.style.display = "block";
+        }
+    }
+
+    function logoutUser() {
+        let confirmLogout = confirm("Are you sure you want to logout from MSGT Portal?");
+        if (confirmLogout) {
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('main-portal-content').style.display = "none";
+            document.getElementById('login-screen').style.display = "block";
+        }
+    }
+
+    // DATABASE & APP CORE LOGIC
+    let database = JSON.parse(localStorage.getItem('csc_db')) || [];
+    let currentInvoiceData = null;
+
+    function addServiceRow() {
+        const container = document.getElementById('services-container');
+        if(!container) return;
+        const row = document.createElement('div');
+        row.className = 'service-row';
+        row.innerHTML = `
+            <div class="service-col wide">
+                <label>Service Name</label>
+                <input type="text" class="p-name" placeholder="eg: Passport">
+            </div>
+            <div class="service-col">
+                <label>Quantity</label>
+                <input type="number" class="p-qty" value="1" min="1" oninput="calculateRowTotal(this)">
+            </div>
+            <div class="service-col">
+                <label>Cost (Per Unit)</label>
+                <input type="number" class="p-cost" value="0" min="0" oninput="calculateRowTotal(this)">
+            </div>
+            <div class="service-col">
+                <label>Total Amt Collected</label>
+                <input type="number" class="p-total" value="0" min="0" oninput="calculateRowTotal(this)">
+            </div>
+            <div class="service-col">
+                <label>Net Service Charge</label>
+                <input type="number" class="p-charge" value="0" readonly style="background-color: #eee;">
+            </div>
+            <div class="service-col shrink" style="flex: 0 0 auto;">
+                <button type="button" class="btn-danger" onclick="removeServiceRow(this)">❌</button>
+            </div>
+        `;
+        container.appendChild(row);
+    }
+
+    function removeServiceRow(button) {
+        const rows = document.querySelectorAll('.service-row');
+        if(rows.length > 1) {
+            button.closest('.service-row').remove();
+        } else {
+            alert("At least one service row is required!");
+        }
+    }
+
+    function calculateRowTotal(element) {
+        const row = element.closest('.service-row');
+        const qty = parseFloat(row.querySelector('.p-qty').value) || 0;
+        const unitCost = parseFloat(row.querySelector('.p-cost').value) || 0;
+        const totalCollected = parseFloat(row.querySelector('.p-total').value) || 0;
+        
+        const totalCostOfQuantity = unitCost * qty;
+        const netServiceCharge = totalCollected - totalCostOfQuantity;
+        
+        row.querySelector('.p-charge').value = netServiceCharge;
+    }
+
+    function saveData() {
+        try {
+            const nameField = document.getElementById('cust-name');
+            const phoneField = document.getElementById('cust-phone');
+            
+            const name = nameField ? nameField.value.trim() : "";
+            const phone = phoneField ? phoneField.value.trim() : "";
+            
+            if(!name) { alert("Please enter Customer Name!"); return; }
+            if(!phone) { alert("Please enter WhatsApp Number!"); return; }
+
+            let services = [];
+            let totalBillAmount = 0;
+            let totalNetProfit = 0;
+
+            const rows = document.querySelectorAll('.service-row');
+            rows.forEach(row => {
+                const sNameInput = row.querySelector('.p-name');
+                const sName = sNameInput ? sNameInput.value.trim() : "General Service";
+                const qty = parseFloat(row.querySelector('.p-qty').value) || 1;
+                const unitCost = parseFloat(row.querySelector('.p-cost').value) || 0;
+                const totalRowAmount = parseFloat(row.querySelector('.p-total').value) || 0;
+                const netServiceCharge = parseFloat(row.querySelector('.p-charge').value) || 0;
+
+                totalBillAmount += totalRowAmount;
+                totalNetProfit += netServiceCharge;
+                
+                const ratePerUnit = qty > 0 ? (totalRowAmount / qty).toFixed(2) : totalRowAmount;
+                
+                services.push({ 
+                    sName: sName === "" ? "General Service" : sName, 
+                    qty, 
+                    rate: ratePerUnit,
+                    total: totalRowAmount, 
+                    profit: netServiceCharge 
+                });
+            });
+
+            const customerData = {
+                id: Math.floor(100000 + Math.random() * 900000).toString(),
+                date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }),
+                name, phone,
+                loginId: document.getElementById('cust-login').value || "",
+                password: document.getElementById('cust-pass').value || "",
+                expiry: document.getElementById('cust-expiry').value || "",
+                services,
+                totalBillAmount,
+                totalNetProfit
+            };
+
+            database.push(customerData);
+            localStorage.setItem('csc_db', JSON.stringify(database));
+            
+            currentInvoiceData = customerData;
+            
+            updateDashboard();
+            checkExpiryAlerts();
+            renderReportTable();
+            prepareInvoicePrintArea(customerData);
+            
+            document.getElementById('manual-print-btn').style.display = "inline-block";
+            alert("Data Saved Successfully! Now click '2. Print Invoice 🖨️'");
+        } catch (error) {
+            alert("Error saving data: " + error.message);
+        }
+    }
+
+    function prepareInvoicePrintArea(data) {
+        document.getElementById('inv-id').innerText = data.id;
+        document.getElementById('inv-date').innerText = data.date;
+        document.getElementById('inv-cust-name').innerText = data.name;
+        document.getElementById('inv-cust-phone').innerText = data.phone;
+        
+        let itemsHtml = '';
+        data.services.forEach((s, index) => {
+            itemsHtml += `<tr>
+                <td class="col-sno">${index + 1}</td>
+                <td class="col-service">${s.sName}</td>
+                <td class="col-qty">${s.qty}</td>
+                <td class="col-rate">₹${s.rate}</td>
+                <td class="col-amount">₹${s.total}</td>
+            </tr>`;
+        });
+        document.getElementById('inv-items').innerHTML = itemsHtml;
+        document.getElementById('inv-total').innerText = data.totalBillAmount;
+    }
+
+    function triggerManualPrint() {
+        if(!currentInvoiceData) {
+            alert("Please save data first!");
+            return;
+        }
+        window.print();
+        document.getElementById('manual-print-btn').style.display = "none";
+        clearForm();
+    }
+
+    function updateDashboard() {
+        let totalColl = database.reduce((acc, curr) => acc + (parseFloat(curr.totalBillAmount) || 0), 0);
+        let totalProf = database.reduce((acc, curr) => acc + (parseFloat(curr.totalNetProfit) || 0), 0);
+        document.getElementById('dash-collection').innerText = totalColl;
+        document.getElementById('dash-profit').innerText = totalProf;
+    }
+
+    function checkExpiryAlerts() {
+        const container = document.getElementById('expiry-alerts-container');
+        const section = document.getElementById('expiry-dashboard-section');
+        if(!container || !section) return;
+        
+        container.innerHTML = '';
+        if (database.length === 0) { section.style.display = 'none'; return; }
+
+        const today = new Date(); today.setHours(0,0,0,0);
+        const oneWeekLater = new Date(); oneWeekLater.setDate(today.getDate() + 7);
+
+        let expiringCustomers = [];
+        database.forEach(c => {
+            if (c.expiry) {
+                const expDate = new Date(c.expiry);
+                if (expDate >= today && expDate <= oneWeekLater) expiringCustomers.push(c);
+            }
+        });
+
+        if (expiringCustomers.length > 0) {
+            section.style.display = 'block';
+            expiringCustomers.forEach(c => {
+                let msg = `Hi ${c.name}, your service reminder. Expiry on ${c.expiry}.`;
+                let whatsappUrl = `https://api.whatsapp.com/send?phone=91${c.phone}&text=${encodeURIComponent(msg)}`;
+                
+                const div = document.createElement('div');
+                div.className = 'expiry-item';
+                div.innerHTML = `
+                    <span><strong>${c.name}</strong> (${c.phone}) - Expiry: <strong style="color:var(--danger-color);">${c.expiry}</strong></span>
+                    <a href="${whatsappUrl}" target="_blank" class="whatsapp-btn">📲 Send</a>
+                `;
+                container.appendChild(div);
+            });
+        } else {
+            section.style.display = 'none';
+        }
+    }
+
+    function renderReportTable() {
+        const tbody = document.getElementById('report-history-body');
+        if(!tbody) return;
+        if(database.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">No transactions recorded today.</td></tr>`; return; }
+        
+        let html = '';
+        for(let i = database.length - 1; i >= 0; i--) {
+            let data = database[i];
+            html += `<tr>
+                <td>INV-${data.id}</td>
+                <td>${data.date}</td>
+                <td>${data.name}</td>
+                <td>${data.phone}</td>
+                <td>₹${data.totalBillAmount}</td>
+                <td>₹${data.totalNetProfit}</td>
+            </tr>`;
+        }
+        tbody.innerHTML = html;
+    }
+
+    function searchCustomer() {
+        const num = document.getElementById('search-mobile').value;
+        if(!num) return alert("Please enter a mobile number to search.");
+        const results = database.filter(c => c.phone.includes(num));
+        let html = '<h4>Search Results:</h4>';
+        
+        if(results.length === 0) {
+            html += '<p>No customer profile found with this number.</p>';
+        } else {
+            results.forEach(c => {
+                let msg = `Hi ${c.name}, your details ID: ${c.loginId || 'N/A'}`;
+                let whatsappUrl = `https://api.whatsapp.com/send?phone=91${c.phone}&text=${encodeURIComponent(msg)}`;
+                html += `
+                    <div style="background:#eee; padding:15px; margin-bottom:10px; border-radius:4px;">
+                        <p><strong>Name:</strong> ${c.name} | <strong>ID:</strong> ${c.loginId || 'N/A'}</p>
+                        <a href="${whatsappUrl}" target="_blank" class="whatsapp-btn">Send WhatsApp</a>
+                    </div>`;
+            });
+        }
+        document.getElementById('search-result').innerHTML = html;
+    }
+
+    function exportToExcel() {
+        if(database.length === 0) return alert("No data available to export!");
+        let csvContent = "data:text/csv;charset=utf-8,Bill ID,Date,Customer Name,Phone,Total Amount,Net Profit\n";
+        database.forEach(c => {
+            csvContent += `"${c.id}","${c.date}","${c.name}","${c.phone}",${c.totalBillAmount},${c.totalNetProfit}\n`;
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "CSC_Daily_Report.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function clearForm() {
+        document.getElementById('cust-name').value = '';
+        document.getElementById('cust-phone').value = '';
+        document.getElementById('cust-login').value = '';
+        document.getElementById('cust-pass').value = '';
+        document.getElementById('cust-expiry').value = '';
+        document.getElementById('services-container').innerHTML = '';
+        currentInvoiceData = null;
+        addServiceRow();
+    }
+</script>
+</body>
+</html>
